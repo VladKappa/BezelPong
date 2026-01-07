@@ -70,7 +70,7 @@ class MainActivity : ComponentActivity() {
         if (isRotary && event.action == MotionEvent.ACTION_SCROLL) {
             val steps = -event.getAxisValue(MotionEvent.AXIS_SCROLL)
             if (steps != 0f) Log.d("ROTARY", "steps=$steps")
-            RotaryBus.delta += steps * radiansPerStep
+            RotaryBus.push(steps, steps * radiansPerStep)
             return true
         }
 
@@ -124,9 +124,23 @@ class MainActivity : ComponentActivity() {
                     val dt = ((frameNanos - lastNanos) / 1_000_000_000f).coerceIn(0f, 0.05f)
                     lastNanos = frameNanos
 
-                    val delta = RotaryBus.consumeDelta()
+                    val steps = RotaryBus.consumeSteps()
+                    val delta = RotaryBus.consumeRadians()
                     if (delta != 0f) Log.d("ROTARY", "delta=$delta")
-                    world.onRotary(delta)
+                    if (showMenu) {
+                        if (steps != 0f) {
+                            val stepSize = 0.02f
+                            val adj = when {
+                                steps > 0f -> stepSize
+                                steps < 0f -> -stepSize
+                                else -> 0f
+                            }
+                            sensitivityUi = (sensitivityUi + adj).coerceIn(0.05f, 0.9f)
+                            radiansPerStep = sensitivityUi
+                        }
+                    } else {
+                        if (delta != 0f) world.onRotary(delta)
+                    }
 
                     if (phase == GamePhase.Playing) {
                         world.update(dt)
@@ -358,8 +372,16 @@ class MainActivity : ComponentActivity() {
     }
 
     object RotaryBus {
-        var delta: Float = 0f
-        fun consumeDelta(): Float = delta.also { delta = 0f }
+        var steps: Float = 0f
+        var radians: Float = 0f
+
+        fun push(steps: Float, radians: Float) {
+            this.steps += steps
+            this.radians += radians
+        }
+
+        fun consumeSteps(): Float = steps.also { steps = 0f }
+        fun consumeRadians(): Float = radians.also { radians = 0f }
     }
 }
 
