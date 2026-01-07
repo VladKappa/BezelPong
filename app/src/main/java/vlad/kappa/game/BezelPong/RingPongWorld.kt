@@ -4,6 +4,7 @@ import android.os.SystemClock
 import android.util.Log
 import androidx.compose.ui.geometry.Offset
 import kotlin.math.*
+import kotlin.random.Random
 
 class RingPongWorld(w: Float, h: Float) {
 
@@ -210,7 +211,8 @@ class RingPongWorld(w: Float, h: Float) {
 
         val dAng = angleDelta(paddleAngle, hitAng)
         val edgeMargin = (4f * PI.toFloat() / 180f) // 4 degrees of forgiveness (tune 2..6)
-        if (abs(dAng) > (paddleHalfWidth + edgeMargin)) {
+        val angPad = asin((ballRadius / hitLen).coerceIn(0f, 0.9f))
+        if (abs(dAng) > (paddleHalfWidth + edgeMargin + angPad)) {
             dbg("MISS dAng=$dAng hitAng=$hitAng paddle=$paddleAngle")
             return false
         }
@@ -248,6 +250,13 @@ class RingPongWorld(w: Float, h: Float) {
 
 // ✅ prevent boring straight/radial returns (anti-infinite farm)
         newV = ensureAngle(newV, nOut, minTangentialRatio = 0.22f)
+
+// Add a tiny random angular jitter on paddle hits to break perfect back-and-forth loops
+        if (abs(hitNorm) < 0.6f) {
+            val jitterDeg = 2.0f
+            val jitter = (Random.nextFloat() * 2f - 1f) * (jitterDeg * PI.toFloat() / 180f)
+            newV = rotate(newV, jitter)
+        }
 
 // 3) Speed ramp after each hit
         val baseSpeed = minSide * 0.55f * speedMul
@@ -332,4 +341,10 @@ private fun angleDelta(source: Float, target: Float): Float {
     if (d <= -PI.toFloat()) d += twoPi
     if (d > PI.toFloat()) d -= twoPi
     return d
+}
+
+private fun rotate(v: Offset, angle: Float): Offset {
+    val c = cos(angle)
+    val s = sin(angle)
+    return Offset(v.x * c - v.y * s, v.x * s + v.y * c)
 }
