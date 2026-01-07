@@ -84,6 +84,7 @@ class MainActivity : ComponentActivity() {
         // Settings UI state (no Material3).
         var showMenu by remember { mutableStateOf(false) }
         var sensitivityUi by remember { mutableFloatStateOf(radiansPerStep) }
+        var smoothInput by remember { mutableStateOf(true) }
 
         val ctx = LocalContext.current
         var highScore by remember { mutableIntStateOf(0) }
@@ -113,6 +114,7 @@ class MainActivity : ComponentActivity() {
             // Game loop
             LaunchedEffect(world, phase) {
                 var lastNanos = 0L
+                var pendingDelta = 0f
                 while (true) {
                     val frameNanos = awaitFrame()
                     if (lastNanos == 0L) lastNanos = frameNanos
@@ -123,6 +125,7 @@ class MainActivity : ComponentActivity() {
                     val delta = RotaryBus.consumeRadians()
                     if (delta != 0f) Log.d("ROTARY", "delta=$delta")
                     if (showMenu) {
+                        pendingDelta = 0f
                         if (steps != 0f) {
                             val stepSize = 0.02f
                             val adj = when {
@@ -134,7 +137,12 @@ class MainActivity : ComponentActivity() {
                             radiansPerStep = sensitivityUi
                         }
                     } else {
-                        if (delta != 0f) world.onRotary(delta)
+                        if (delta != 0f) pendingDelta += delta
+                        if (pendingDelta != 0f) {
+                            val applied = if (smoothInput) pendingDelta * 0.35f else pendingDelta
+                            pendingDelta -= applied
+                            world.onRotary(applied)
+                        }
                     }
 
                     if (phase == GamePhase.Playing) {
@@ -332,6 +340,17 @@ class MainActivity : ComponentActivity() {
                                                 }
                                             }
                                     ) { Text("+", color = Color.White, fontSize = 18.sp) }
+                                }
+
+                                Box(
+                                    modifier = Modifier
+                                        .padding(top = 10.dp)
+                                        .pointerInput(Unit) {
+                                            detectTapGestures { smoothInput = !smoothInput }
+                                        }
+                                ) {
+                                    val label = if (smoothInput) "ON" else "OFF"
+                                    Text("Smoothing: $label", color = Color.White)
                                 }
 
                                 Box(
