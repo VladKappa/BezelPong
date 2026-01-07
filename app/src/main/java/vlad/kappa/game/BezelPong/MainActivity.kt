@@ -58,6 +58,13 @@ class MainActivity : ComponentActivity() {
         setContent { RingPongScreen() }
     }
 
+    override fun onStop() {
+        super.onStop()
+        if (!isChangingConfigurations) {
+            finishAndRemoveTask()
+        }
+    }
+
     override fun dispatchGenericMotionEvent(event: MotionEvent): Boolean {
         val isRotary =
             (event.source and InputDevice.SOURCE_ROTARY_ENCODER) == InputDevice.SOURCE_ROTARY_ENCODER
