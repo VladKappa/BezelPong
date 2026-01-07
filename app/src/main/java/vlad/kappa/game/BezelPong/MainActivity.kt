@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.*
@@ -30,6 +31,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
@@ -42,13 +44,6 @@ import androidx.wear.compose.material.curvedText
 import kotlinx.coroutines.android.awaitFrame
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import androidx.compose.foundation.layout.offset
-import androidx.compose.ui.unit.IntOffset
-
-// ⚠️ IMPORTANT: Wear uses Material (androidx.wear.compose.material), not Material3 by default.
-// If you don't have Material3 in your deps, remove it.
-// We will implement the settings menu as a simple Wear overlay panel instead of AlertDialog/Slider
-// to avoid "Unresolved reference material3" and keep everything warning-free.
 
 private enum class GamePhase { Start, Playing, GameOver }
 
@@ -86,7 +81,7 @@ class MainActivity : ComponentActivity() {
         var phase by remember { mutableStateOf(GamePhase.Start) }
         var score by remember { mutableIntStateOf(0) }
 
-        // Settings UI state (no material3)
+        // Settings UI state (no Material3).
         var showMenu by remember { mutableStateOf(false) }
         var sensitivityUi by remember { mutableFloatStateOf(radiansPerStep) }
 
@@ -272,19 +267,18 @@ class MainActivity : ComponentActivity() {
                         Box(
                             modifier = Modifier
                                 .align(Alignment.TopCenter)
-                                .offset { IntOffset(0, 28) }     // ✅ slightly DOWN from top; tune 20..60
-                                .size(68.dp)                    // ✅ big tap target
-                                .zIndex(10f)                    // ✅ above overlay contents
-//                                .background(Color(0xAA101010))
+                                .offset { IntOffset(0, 28) } // slightly down from top; tune 20..60
+                                .size(68.dp) // big tap target
+                                .zIndex(10f) // above overlay contents
                                 .pointerInput(Unit) {
                                     detectTapGestures {
-                                        // ✅ toggle menu and DO NOT start game
+                                        // Toggle menu; do not start the game.
                                         showMenu = !showMenu
                                     }
                                 },
                             contentAlignment = Alignment.Center
                         ) {
-                            Text("⚙", color = Color.White, fontSize = 34.sp)
+                            Text("\u2699", color = Color.White, fontSize = 34.sp)
                         }
                     }
 
@@ -294,7 +288,7 @@ class MainActivity : ComponentActivity() {
                             modifier = Modifier
                                 .fillMaxSize()
                                 .background(Color(0xCC000000))
-                                .zIndex(20f) // ✅ above overlay + gear
+                                .zIndex(20f) // above overlay + gear
                                 .pointerInput(Unit) {
                                     detectTapGestures(onTap = { showMenu = false })
                                 },
@@ -303,7 +297,6 @@ class MainActivity : ComponentActivity() {
                             Column(
                                 horizontalAlignment = Alignment.CenterHorizontally,
                                 modifier = Modifier
-//                                    .background(Color(0xFF101010))
                                     .padding(12.dp)
                                     .pointerInput(Unit) { /* consume clicks inside panel */ }
                             ) {
@@ -326,7 +319,7 @@ class MainActivity : ComponentActivity() {
                                                     radiansPerStep = sensitivityUi
                                                 }
                                             }
-                                    ) { Text("−", color = Color.White, fontSize = 18.sp) }
+                                    ) { Text("\u2212", color = Color.White, fontSize = 18.sp) }
 
                                     Box(
                                         modifier = Modifier

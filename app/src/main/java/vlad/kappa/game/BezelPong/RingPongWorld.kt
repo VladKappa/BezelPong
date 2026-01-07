@@ -33,7 +33,7 @@ class RingPongWorld(w: Float, h: Float) {
         val dir = Offset(cos(ang), sin(ang)) // outward from paddle
         var v = dir * speed
 
-// Add a small tangential component so it never starts perfectly straight
+        // Add a small tangential component so it never starts perfectly straight.
         val nOut = dir / dir.len().coerceAtLeast(1e-6f)
         v = ensureAngle(v, nOut, minTangentialRatio = 0.18f)
 
@@ -67,7 +67,7 @@ class RingPongWorld(w: Float, h: Float) {
     // Ring where paddle sits
     val ringRadius = minSide * 0.38f
     val paddleThickness = minSide * 0.07f
-    val paddleHalfWidth = (18f * PI.toFloat() / 180f) // 36° total arc
+    val paddleHalfWidth = (18f * PI.toFloat() / 180f) // 36 deg total arc
 
     // Ball
     val ballRadius = minSide * 0.02f
@@ -77,7 +77,7 @@ class RingPongWorld(w: Float, h: Float) {
         private set
 
     // Paddle rotation
-    var paddleAngle: Float = (PI.toFloat() / 2f) // 90° => bottom
+    var paddleAngle: Float = (PI.toFloat() / 2f) // 90 deg => bottom
         private set
 
     private var ballVel: Offset = run {
@@ -88,7 +88,7 @@ class RingPongWorld(w: Float, h: Float) {
 
 
 
-    // For tangential “spin” feel when rotating platform
+    // For tangential "spin" feel when rotating platform
     private var paddleAngVel: Float = 0f
 
     // Optional: keep ball in an outer circle boundary too
@@ -117,7 +117,6 @@ class RingPongWorld(w: Float, h: Float) {
     private fun ensureAngle(v: Offset, nOut: Offset, minTangentialRatio: Float): Offset {
         // Decompose velocity into radial (along nOut) and tangential components.
         val tangent = Offset(-nOut.y, nOut.x)
-        val vRad = v dot nOut
         val vTan = v dot tangent
         val speed = v.len().coerceAtLeast(1f)
 
@@ -132,8 +131,6 @@ class RingPongWorld(w: Float, h: Float) {
         val s2 = v2.len().coerceAtLeast(1f)
         return v2 * (speed / s2)
     }
-
-
 
     fun update(dt: Float) {
         ballPrevPos = ballPos
@@ -153,10 +150,10 @@ class RingPongWorld(w: Float, h: Float) {
                 if (wallBouncesLeft > 0) {
                     wallBouncesLeft-- // consume the credit
 
-                    // ✅ DO the bounce (push inside + reflect)
+                    // Do the bounce (push inside + reflect)
                     bounceOuterWall()
 
-                    // ✅ speed up slightly on every wall hit
+                    // Speed up slightly on every wall hit
                     speedMul = (speedMul * 1.03f).coerceAtMost(2.0f)
 
                     // Re-normalize velocity to new speed
@@ -174,10 +171,6 @@ class RingPongWorld(w: Float, h: Float) {
 
         paddleAngVel *= 0.86f
     }
-
-
-
-
 
     private fun bouncePaddleSwept(prev: Offset, curr: Offset): Boolean {
         // Work in center-relative coords
@@ -238,27 +231,27 @@ class RingPongWorld(w: Float, h: Float) {
         // Spin/tangential kick based on outward radial
         val tangent = Offset(-nOut.y, nOut.x)
 
-// 1) Stronger kick from bezel rotation (spin)
+        // 1) Stronger kick from bezel rotation (spin)
         val spinKick = 0.28f
         val tangentialSpeed = paddleAngVel * ringRadius
         newV += tangent * (tangentialSpeed * spinKick)
 
-// 2) "English" based on where on the paddle you hit
+        // 2) "English" based on where on the paddle you hit
         val maxEnglish = 0.55f
         val hitNorm = (dAng / (paddleHalfWidth + (4f * PI.toFloat() / 180f))).coerceIn(-1f, 1f)
         newV += tangent * (hitNorm * maxEnglish * newV.len())
 
-// ✅ prevent boring straight/radial returns (anti-infinite farm)
+        // Prevent boring straight/radial returns (anti-infinite farm).
         newV = ensureAngle(newV, nOut, minTangentialRatio = 0.22f)
 
-// Add a tiny random angular jitter on paddle hits to break perfect back-and-forth loops
+        // Add a tiny random angular jitter on paddle hits to break perfect back-and-forth loops.
         if (abs(hitNorm) < 0.6f) {
             val jitterDeg = 2.0f
             val jitter = (Random.nextFloat() * 2f - 1f) * (jitterDeg * PI.toFloat() / 180f)
             newV = rotate(newV, jitter)
         }
 
-// 3) Speed ramp after each hit
+        // 3) Speed ramp after each hit
         val baseSpeed = minSide * 0.55f * speedMul
         val ramp = 1.10f
         val desiredSpeed = baseSpeed * ramp
@@ -305,12 +298,6 @@ class RingPongWorld(w: Float, h: Float) {
         val len = pos.len().coerceAtLeast(1e-6f)
         return Hit(t = t, pos = pos, posLen = len, isOuter = true)
     }
-
-
-
-
-    private fun lerp(a: Offset, b: Offset, t: Float): Offset =
-        Offset(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t)
 }
 
 /* ---------- Math helpers ---------- */
