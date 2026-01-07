@@ -29,6 +29,13 @@ Requirements: Android Studio, Wear OS emulator or device, minSdk 30.
 
 Then launch the app on your watch/emulator.
 
+## Alternative install (ADB)
+
+If you prefer the command line, you can pair and install via ADB:
+
+1) Pair the watch: `adb pair <ip:port>`
+2) Install: `./gradlew :app:installDebug`
+
 ## Notes
 
 - Made and tested on a Galaxy Watch 6 Classic (physical bezel). Not tested on other devices.
